@@ -1,0 +1,17 @@
+# 启动/停止的目标类型
+uint8 ENUM_UNKNOWN = 0
+
+uint8 ENUM_ASTRIBOT_CAMERA = 1
+uint8 ENUM_ASTRIBOT_JOY = 2
+uint8 ENUM_ASTRIBOT_VR = 3
+uint8 ENUM_ASTRIBOT_MIC = 4
+uint8 ENUM_ASTRIBOT_LIDAR = 5
+uint8 ENUM_ASTRIBOT_TELEOP = 6
+uint8 ENUM_REMOTE_CONTROL_SEETHROUGH = 7
+
+# 启动或停止类型
+uint8 ENUM_DEACTIVE = 1
+uint8 ENUM_ACTIVE = 2
+
+uint8 launch_target
+uint8 launch_action

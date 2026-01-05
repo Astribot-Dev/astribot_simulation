@@ -1,0 +1,46 @@
+    simulator_type: "IsaacLab"
+    robot_name: astribot_s1_whole_body
+    model_path: "/astribot_descriptions/usd/astribot_s1_usd/astribot_s1.usda"
+    robot_list: [
+        "astribot_torso",
+        "astribot_head",
+        "astribot_arm_left",
+        "astribot_gripper_left",
+        "astribot_arm_right",
+        "astribot_gripper_right",
+    ]
+    joint_names_list: [
+        ["astribot_torso_joint_1",
+         "astribot_torso_joint_2",
+         "astribot_torso_joint_3",
+         "astribot_torso_joint_4"],
+
+        ["astribot_head_joint_1",
+         "astribot_head_joint_2"],
+
+        ["astribot_arm_left_joint_1",
+         "astribot_arm_left_joint_2",
+         "astribot_arm_left_joint_3",
+         "astribot_arm_left_joint_4",
+         "astribot_arm_left_joint_5",
+         "astribot_arm_left_joint_6",
+         "astribot_arm_left_joint_7",],
+        ['astribot_gripper_left_joint_L1'],
+        ["astribot_arm_right_joint_1",
+         "astribot_arm_right_joint_2",
+         "astribot_arm_right_joint_3",
+         "astribot_arm_right_joint_4",
+         "astribot_arm_right_joint_5",
+         "astribot_arm_right_joint_6",
+         "astribot_arm_right_joint_7",],
+        ['astribot_gripper_right_joint_L1'],
+    ]
+    gravity_compensation: True
+    mode: "human"
+    width: 1920
+    height: 1080
+    object_names: []
+    camera_names: []
+    sensor_names: []
+    vel_compensation_list: [True, True, True, True, True, True]
+    update_trajectory_map: {}

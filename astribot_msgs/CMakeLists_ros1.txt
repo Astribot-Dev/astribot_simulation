@@ -1,0 +1,46 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(astribot_msgs)
+
+# 找到必要的ROS组件
+find_package(catkin REQUIRED COMPONENTS
+  message_generation
+  geometry_msgs
+  sensor_msgs
+  std_msgs
+)
+
+# 添加消息文件
+add_message_files(
+  FILES
+  AstribotControlCommand.msg
+  RobotJointController.msg
+  RobotJointState.msg
+  DoubleArray.msg
+  RobotCartesianState.msg
+  RobotCartesianStates.msg
+  RobotVisualStates.msg
+)
+
+
+# 添加服务文件
+add_service_files(
+  FILES
+  RawRequest.srv
+)
+
+# 生成消息
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs
+  sensor_msgs
+  std_msgs
+)
+
+# 添加消息生成路径
+include_directories(${catkin_INCLUDE_DIRS})
+
+# 不需要catkin_package也可以直接生成
+catkin_package(
+  CATKIN_DEPENDS message_runtime
+)
+

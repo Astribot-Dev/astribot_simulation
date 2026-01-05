@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>astribot_msgs</name>
+  <version>0.1.0</version>
+  <description>My custom ROS messages</description>
+
+  <maintainer email="your_email@example.com">Your Name</maintainer>
+  <license>MIT</license>
+
+  <!-- 必须声明 buildtool -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- 声明其他依赖 -->
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <export>
+    <!-- 空节点，用于扩展 -->
+  </export>
+</package>
+

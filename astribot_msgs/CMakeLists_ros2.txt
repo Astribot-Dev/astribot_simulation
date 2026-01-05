@@ -1,0 +1,55 @@
+cmake_minimum_required(VERSION 3.10)
+project(astribot_msgs VERSION 0.1.0)
+
+#*********************************************************************************************************************#
+#================================================ common cmake config ================================================#
+#=====================================Every C++ progress need include this module=====================================#
+#*********************************************************************************************************************#
+
+# Package dependencies
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
+
+# Compile configurations
+# find_package(astribot_common_tools REQUIRED)
+# set(COMMON_TOOLS_PATH ${astribot_common_tools_INCLUDE_DIRS})
+# set(COMMON_CMAKE_PATH ${COMMON_TOOLS_PATH})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${COMMON_CMAKE_PATH})
+
+# Common cmake start
+# include(astribot_cmake_start)
+# include(astribot_common)
+
+
+#*********************************************************************************************************************#
+#================================================ project cmake config ===============================================#
+#*********************************************************************************************************************#
+
+file(GLOB MSG_FILES "msg/*.msg")
+file(GLOB SRV_FILES "srv/*.srv")
+file(GLOB ACTION_FILES "action/*.action")
+
+set(TOTAL_MESSAGE_FILES)
+
+foreach(FILE ${MSG_FILES})
+  file(RELATIVE_PATH RELATIVE_FILE ${CMAKE_CURRENT_SOURCE_DIR} ${FILE})
+  list(APPEND TOTAL_MESSAGE_FILES ${RELATIVE_FILE})
+endforeach()
+
+foreach(FILE ${SRV_FILES})
+  file(RELATIVE_PATH RELATIVE_FILE ${CMAKE_CURRENT_SOURCE_DIR} ${FILE})
+  list(APPEND TOTAL_MESSAGE_FILES ${RELATIVE_FILE})
+endforeach()
+
+foreach(FILE ${ACTION_FILES})
+  file(RELATIVE_PATH RELATIVE_FILE ${CMAKE_CURRENT_SOURCE_DIR} ${FILE})
+  list(APPEND TOTAL_MESSAGE_FILES ${RELATIVE_FILE})
+endforeach()
+
+rosidl_generate_interfaces(${PROJECT_NAME} ${TOTAL_MESSAGE_FILES} DEPENDENCIES
+                           builtin_interfaces std_msgs geometry_msgs)
+
+ament_auto_package()
+
+
+

@@ -1,0 +1,55 @@
+# 本地配置文件
+.config
+.settings
+
+# 编译生成的文件
+build/
+install/
+devel/
+log/
+devel_isolated/
+
+# 系统文件
+*.swp
+*.swo
+.thumbs
+.DS_Store
+
+# 日志文件
+*.log
+
+# 缓存文件
+*.pyc
+__pycache__/
+
+# ROS特定文件
+*.ros
+*.rosinstall
+*.rosdep
+
+# Catkin工作空间文件
+catkin_workspace/
+catkin_make/
+catkin_make_isolated/
+
+# Colcon工作空间文件
+colcon_workspace/
+colcon_build/
+
+# ROS包管理文件
+packages.xml
+
+# IDE文件
+*.idea/
+*.project
+*.cproject
+*.launches
+
+# 其他常见忽略文件
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.xz
+*.7z
+.tmp

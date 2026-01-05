@@ -1,0 +1,4 @@
+# Request part - using empty request as no parameters needed
+---
+bool response
+string message

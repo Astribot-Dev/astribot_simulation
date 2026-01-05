@@ -1,0 +1,23 @@
+# 要录制的话题列表
+string topic_list   # list of topics need to record
+
+# 0 表示采用数采模式并发送需要录制的话题
+# 1 表示触发数采
+# 2 表示采用快照模式并发送需要录制的话题
+# 3 表示触发快照
+int32 storage_type 
+int64 trigger_time      #触发时间
+string archive_path     #最终数据归档的目标文件夹 
+---
+# 最终录制存储的文件夹、遗漏的话题列表
+string dir_path
+string miss_topic_list
+---
+# 期间录制时间,磁盘剩余空间,遗漏话题列表,录制状态
+int32 seconds
+int32 disk_space
+string miss_topic_list
+uint32 status
+uint32 STATUS_RECORDING = 3
+uint32 STATUS_UPDATE = 4
+uint32 STATUS_STOP = 5

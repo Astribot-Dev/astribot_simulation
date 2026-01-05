@@ -1,0 +1,49 @@
+    simulator_type: "Mujoco"
+    robot_name: astribot_whole_body
+    model_path: "/astribot_descriptions/mjcf/astribot_s1_mjcf/astribot_s1_for_aloha_with_gripper.xml"
+    robot_list: [
+        "astribot_chassis",
+        "astribot_torso",
+        "astribot_head",
+        "astribot_arm_left",
+        "astribot_gripper_left",
+        "astribot_arm_right",
+        "astribot_gripper_right",
+    ]
+    joint_names_list: [
+        ["astribot_chassis_x",
+         "astribot_chassis_y",
+         "astribot_chassis_zrot"],
+        ["astribot_torso_joint_1",
+         "astribot_torso_joint_2",
+         "astribot_torso_joint_3",
+         "astribot_torso_joint_4"],
+
+        ["astribot_head_joint_1",
+         "astribot_head_joint_2"],
+
+        ["astribot_arm_left_joint_1",
+         "astribot_arm_left_joint_2",
+         "astribot_arm_left_joint_3",
+         "astribot_arm_left_joint_4",
+         "astribot_arm_left_joint_5",
+         "astribot_arm_left_joint_6",
+         "astribot_arm_left_joint_7",],
+        ['astribot_gripper_left_joint_L1'],
+        ["astribot_arm_right_joint_1",
+         "astribot_arm_right_joint_2",
+         "astribot_arm_right_joint_3",
+         "astribot_arm_right_joint_4",
+         "astribot_arm_right_joint_5",
+         "astribot_arm_right_joint_6",
+         "astribot_arm_right_joint_7",],
+        ['astribot_gripper_right_joint_L1'],
+    ]
+    gravity_compensation: True
+    mode: "rgb_array"
+    width: 640
+    height: 480
+    object_names: ["box_red"]  #, "box_green", "box_blue"
+    camera_names: ["head_rgbd", "left_wrist_rgbd", "right_wrist_rgbd", "astribot_global_camera"]
+    sensor_names: []
+    vel_compensation_list: [False, True, True, True, True, True, True]
