@@ -236,12 +236,6 @@ The robot supports cameras on hands and head. After loading the correct YAML con
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome!  
-If you’d like to add support for new simulators or robots, please contact me at [tonywang@astribot.com].
-
----
 
 ## 📜 License
 
