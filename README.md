@@ -117,7 +117,7 @@ git submodule update --init --recursive
 # Batch pull LFS objects for all submodules
 git submodule foreach git lfs pull
 
-# (Optional) Install Miniconda - only needed for Ubuntu 20.04 (ROS1)
+# (ROS1 only) Install Miniconda (Ubuntu 20.04)
 bash tools/Miniconda3-py38_4.9.2-Linux-x86_64.sh
 
 # Install dependencies
@@ -137,7 +137,10 @@ bash tools/install.sh
 ### Launch Astribot Simulation:
 
 ```python
+# (ROS1 only) Activate conda environment
 conda activate astribot_simu
+
+# Run astribot simulation
 source env.sh && python3 astribot_simulation.py
 ```
 
