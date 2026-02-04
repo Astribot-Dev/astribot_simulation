@@ -92,6 +92,12 @@ git clone -b develop https://gitlab.astribot.com/public_repo/astribot_simulation
 # Navigate to the project directory
 cd astribot_simulation
 
+# Initialize and update all submodules recursively
+git submodule update --init --recursive
+
+# Batch pull LFS objects for all submodules
+git submodule foreach git lfs pull
+
 # Install all simulators (MuJoCo, Genesis, ManiSkill)
 bash tools/install.sh
 ```
@@ -104,6 +110,12 @@ git clone -b develop https://gitlab.astribot.com/public_repo/astribot_simulation
 
 # Navigate to the project directory
 cd astribot_simulation
+
+# Initialize and update all submodules recursively
+git submodule update --init --recursive
+
+# Batch pull LFS objects for all submodules
+git submodule foreach git lfs pull
 
 # (Optional) Install Miniconda - only needed for Ubuntu 20.04 (ROS1)
 bash tools/Miniconda3-py38_4.9.2-Linux-x86_64.sh
