@@ -1,3 +1,6 @@
 [submodule "astribot_descriptions"]
 	path = astribot_descriptions
 	url = git@github.com:Astribot-Dev/astribot_descriptions.git
+[submodule "astribot_msgs"]
+	path = astribot_msgs
+	url = git@github.com:Astribot-Dev/astribot_msgs.git
