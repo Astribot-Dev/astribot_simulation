@@ -76,27 +76,57 @@ astribot_simulation/
 └── __init__.py
 ```
 
----
-
 ## 📦 Installation
 
-### Clone with submodules
+You can install the simulation either inside a Docker container or directly on your host machine.
+
+### Option 1: Docker Installation
+
 ```bash
-git clone https://github.com/Astribot-Dev/astribot_sim
+# Enter the Ubuntu 22.04 Docker container
+docker exec -it ****** /bin/bash
+
+# Clone the repository
+git clone https://github.com/Astribot-Dev/astribot_simulation.git
+
+# Navigate to the project directory
 cd astribot_simulation
-git submodule init
-git submodule update
+
+# Initialize and update all submodules recursively
+git submodule update --init --recursive
+
+# Batch pull LFS objects for all submodules
+git submodule foreach git lfs pull
+
+# Install all simulators (MuJoCo, Genesis, ManiSkill, IsaacLab)
+bash tools/install.sh
 ```
 
-### Install dependencies
+### Option 2: Host Machine Installation
 
-#### install miniconda for simulation
 ```bash
+# Clone the repository
+git clone https://github.com/Astribot-Dev/astribot_simulation.git
+
+# Navigate to the project directory
+cd astribot_simulation
+
+# Initialize and update all submodules recursively
+git submodule update --init --recursive
+
+# Batch pull LFS objects for all submodules
+git submodule foreach git lfs pull
+
+# (ROS1 only) Install Miniconda (Ubuntu 20.04)
 bash tools/Miniconda3-py38_4.9.2-Linux-x86_64.sh
-```
 
-#### install dependencies for simulation
-```bash
+# Install dependencies
+# Choose one of the following:
+
+# Install only MuJoCo simulator
+bash tools/lite_install/install_mujoco.sh
+
+# OR install all simulators (MuJoCo, Genesis, ManiSkill, IsaacLab)
 bash tools/install.sh
 ```
 
