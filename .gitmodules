@@ -1,4 +1,3 @@
 [submodule "astribot_descriptions"]
 	path = astribot_descriptions
-	url = https://github.com/Astribot-Dev/astribot_descriptions.git
-	branch = main
+	url = git@github.com:Astribot-Dev/astribot_descriptions.git

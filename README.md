@@ -12,25 +12,28 @@ It is designed as a **research tool** for users of Astribot.
 
 ## 🎥 Demo
 
-<p align="center">
-  <img src="docs/moving.gif" alt="Astribot Simulation Demo" width="600">
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <p><b>ManiSkill Environment</b></p>
+      <img src="docs/maniskill.gif" alt="ManiSkill Demo" width="400">
+    </td>
+    <td align="center">
+      <p><b>MuJoCo Environment</b></p>
+      <img src="docs/mujoco.gif" alt="MuJoCo Demo" width="400">
+    </td>
+  </tr>
+</table>
 
 ---
 
 ## 📌 Features
 
-- 🔄 **Multi-backend environments**: Switch between **MuJoCo**, **Genesis**, **ManiSkill**, and **IsaacLab** with one line of code.  
+- 🔄 **Multi-backend environments**: Switch between **MuJoCo**, **Genesis**, **ManiSkill**, and **NVIDIA Isaac Lab** with one line of code.  
 - ⚡ **ROS & ROS2 Integration**: Comprehensive support for both ROS1 and ROS2 interfaces to bridge simulation and real robots.  
 - 🤖 **Plug-and-play robot models**: Full support for **URDF** and **MJCF** formats.  
 - 🧩 **Config-driven setup**: Easily manage each simulator and robot variant via structured **YAML** configurations.  
 - 🛠 **Research-friendly utilities**: Includes logging, common analysis tools, and a unified environment factory.  
-
----
-
-## 🗺 Roadmap
-
-- 🐳 **Dockerized deployment**: Pre-configured Docker images for easy environment setup and reproduction. *(Coming Soon)*  
 
 ---
 
@@ -43,7 +46,6 @@ astribot_simulation/
 │   ├── astribot_mujoco_env.py
 │   ├── astribot_genesis_env.py
 │   ├── astribot_maniskill_env.py
-│   ├── astribot_isaaclab_env.py
 │   └── astribot_envs_factory.py
 │
 │── config/                     # YAML configs for different robots & simulators
@@ -63,6 +65,7 @@ astribot_simulation/
 │
 │── tools/                      # Setup scripts
 │   ├── install.sh
+│   ├── build.sh
 │   ├── Miniconda3-py38_4.9.2-Linux-x86_64.sh
 │   ├── fix_GLIBCXX_3.4.30_bug.sh
 │   └── fix_LIBFFI_BASE_7.0_bug.sh
@@ -70,7 +73,6 @@ astribot_simulation/
 │── astribot_simulation.py      # Main entry
 │── env.sh                      # Environment setup
 │── README.md
-│── LICENSE
 └── __init__.py
 ```
 
@@ -78,55 +80,23 @@ astribot_simulation/
 
 ## 📦 Installation
 
-You can install the simulation either inside a Docker container or directly on your host machine.
-
-### Option 1: Docker Installation
-
+### Clone with submodules
 ```bash
-# Enter the Ubuntu 22.04 Docker container
-docker exec -it ****** /bin/bash
-
-# Clone the repository
-git clone -b develop https://gitlab.astribot.com/public_repo/astribot_simulation.git
-
-# Navigate to the project directory
+git clone https://github.com/Astribot-Dev/astribot_sim
 cd astribot_simulation
-
-# Initialize and update all submodules recursively
-git submodule update --init --recursive
-
-# Batch pull LFS objects for all submodules
-git submodule foreach git lfs pull
-
-# Install all simulators (MuJoCo, Genesis, ManiSkill)
-bash tools/install.sh
+git submodule init
+git submodule update
 ```
 
-### Option 2: Host Machine Installation
+### Install dependencies
 
+#### install miniconda for simulation
 ```bash
-# Clone the repository
-git clone -b develop https://gitlab.astribot.com/public_repo/astribot_simulation.git
-
-# Navigate to the project directory
-cd astribot_simulation
-
-# Initialize and update all submodules recursively
-git submodule update --init --recursive
-
-# Batch pull LFS objects for all submodules
-git submodule foreach git lfs pull
-
-# (ROS1 only) Install Miniconda (Ubuntu 20.04)
 bash tools/Miniconda3-py38_4.9.2-Linux-x86_64.sh
+```
 
-# Install dependencies
-# Choose one of the following:
-
-# Install only MuJoCo simulator
-bash tools/install_mujoco.sh
-
-# OR install all simulators (MuJoCo, Genesis, ManiSkill, IsaacLab)
+#### install dependencies for simulation
+```bash
 bash tools/install.sh
 ```
 
@@ -137,10 +107,7 @@ bash tools/install.sh
 ### Launch Astribot Simulation:
 
 ```python
-# (ROS1 only) Activate conda environment
 conda activate astribot_simu
-
-# Run astribot simulation
 source env.sh && python3 astribot_simulation.py
 ```
 
@@ -162,6 +129,23 @@ def main():
 if __name__ == '__main__':
     main()
 ```
+
+---
+
+## 🏗️ Architecture
+
+To achieve high modularity and support multiple simulation backends, `astribot_simulation` is designed with a factory-pattern architecture.
+
+### Class Diagram
+<p align="center">
+  <img src="docs/class_diagram.png" alt="Astribot Simulation Class Diagram" width="900">
+</p>
+
+### Design Highlights
+*   **Unified API**: All simulation environments (MuJoCo, Genesis, Isaac Lab, ManiSkill) inherit from `AstribotBaseEnv`, which is compatible with `gym.Env`.
+*   **Factory Pattern**: Users can switch between different simulators by simply changing the `simulator_type` in the configuration via `AstribotEnvsFactory`.
+*   **Sim-to-Real Bridge**: The `MultiRobotRosInterface` ensures that the internal simulation states are perfectly aligned with ROS 2 messages, facilitating seamless deployment to real hardware.
+
 ---
 
 ## 📄 YAML Configuration Files
@@ -237,6 +221,7 @@ The robot supports cameras on hands and head. After loading the correct YAML con
 ## 🛠 Tools
 
 - `tools/install.sh` → environment setup  
+- `tools/build.sh` → build astribot_msgs 
 - `tools/Miniconda3-py38_4.9.2-Linux-x86_64.sh` → install miniconda 
 - `tools/fix_GLIBCXX_3.4.30_bug.sh` → patch for GLIBCXX bug  
 - `tools/fix_LIBFFI_BASE_7.0_bug.sh` → patch for libffi bug  
@@ -251,6 +236,12 @@ The robot supports cameras on hands and head. After loading the correct YAML con
 
 ---
 
+## 🤝 Contributing
+
+Contributions are welcome!  
+If you’d like to add support for new simulators or robots, please contact me at [tonywang@astribot.com].
+
+---
 
 ## 📜 License
 

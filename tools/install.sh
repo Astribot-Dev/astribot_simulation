@@ -151,7 +151,6 @@ if pip show isaaclab &> /dev/null; then
 
     # Reinstall Isaac Lab to ensure all components are correct
     pip install --no-deps --force-reinstall isaaclab==2.1.0
-    pip install isaaclab[isaacsim,all]==2.1.0 --extra-index-url https://pypi.nvidia.com
 
     echo "  ✓ Isaac Lab compatible versions installed (torch 2.5.1, pillow 11.0.0, numpy 1.26.4)"
 else
