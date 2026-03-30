@@ -9,7 +9,7 @@
 # -----------------------------------------------------------------------------
 
 import sys
-from astribot_envs.astribot_envs_factory import AstribotEnvsFactory
+from src.astribot_envs.astribot_envs_factory import AstribotEnvsFactory
 
 def main():
     # Load param from yaml, create a simulation env using the Factory Pattern
