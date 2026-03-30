@@ -1,0 +1,14 @@
+"""Minimal test configuration for testing."""
+simulator_type: "Mujoco"
+robot_name: test_robot
+model_path: "/test/model.xml"
+robot_list: ["test_arm"]
+joint_names_list: [["joint_1", "joint_2"]]
+gravity_compensation: true
+mode: "rgb_array"
+width: 640
+height: 480
+object_names: []
+camera_names: []
+sensor_names: []
+vel_compensation_list: [true]

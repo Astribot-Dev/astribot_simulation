@@ -1,0 +1,122 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astribot-simulation"
+version = "1.1.0"
+description = "Unified robot simulation platform for MuJoCo, Genesis, ManiSkill, and Isaac Lab"
+readme = "README.md"
+requires-python = ">=3.8,<3.12"
+license = {text = "BSD-3-Clause"}
+authors = [
+    {name = "Tony Wang", email = "tonywang@astribot.com"}
+]
+keywords = ["robotics", "simulation", "ros", "mujoco", "genesis", "maniskill", "isaac-lab"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Robotics",
+]
+
+dependencies = [
+    "numpy>=1.26.4,<2.0",
+    "gymnasium>=1.1.1",
+    "opencv-python>=4.8.0",
+    "open3d>=0.18.0",
+    "pyyaml>=6.0",
+    # Note: cv_bridge must be installed via ROS (apt install ros-*-cv-bridge)
+]
+
+[project.optional-dependencies]
+mujoco = [
+    "mujoco>=3.2.5",
+    "glfw>=2.6.0",
+]
+genesis = [
+    "genesis-world>=0.2.1",
+    "torch>=2.0.0",
+]
+maniskill = [
+    "mani-skill>=3.0.0",
+    "sapien>=3.0.0",
+]
+isaaclab = [
+    "isaacsim>=4.0.0",
+]
+ros1 = [
+    # Note: rospy must be installed via ROS (apt install ros-noetic-rospy)
+]
+ros2 = [
+    # Note: rclpy must be installed via ROS (apt install ros-humble-rclpy)
+]
+all = [
+    "mujoco>=3.2.5",
+    "glfw>=2.6.0",
+    "genesis-world>=0.2.1",
+    "torch>=2.0.0",
+    "mani-skill>=3.0.0",
+    "sapien>=3.0.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "flake8>=6.1.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.3.0",
+]
+docs = [
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=1.3.0",
+    "sphinx-autodoc-typehints>=1.24.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Astribot-Dev/astribot_simulation"
+Documentation = "https://astribot-simulation.readthedocs.io"
+Repository = "https://github.com/Astribot-Dev/astribot_simulation"
+Issues = "https://github.com/Astribot-Dev/astribot_simulation/issues"
+
+[project.scripts]
+astribot-sim = "astribot_simulation:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["astribot_envs*", "simu_utils*", "sim_assets_tools*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+  | \.eggs
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_gitignore = true
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=astribot_envs --cov=simu_utils --cov-report=html --cov-report=term"

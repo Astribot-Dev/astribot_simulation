@@ -1,6 +1,6 @@
     simulator_type: "Genesis"
     robot_name: astribot_whole_body
-    model_path: "/astribot_descriptions/mjcf/astribot_s1_mjcf/astribot_s1_with_gripper.xml"
+    model_path: "/astribot_descriptions/mjcf/astribot_s1_mjcf/astribot_s1_with_gripper_without_texture.xml"
     robot_list: [
         "astribot_torso",
         "astribot_head",

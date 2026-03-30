@@ -118,7 +118,7 @@ def process_glb_with_existing_uv(glb_path, obj_path, tex_output,
     y_old = glb_verts_matched[:, 1].copy()
     glb_verts_matched[:, 1] = -glb_verts_matched[:, 2]
     glb_verts_matched[:, 2] = y_old
-    print(f"  Matching faces by centroid (GLB Y-up -> Z-up rotated)...")
+    print("  Matching faces by centroid (GLB Y-up -> Z-up rotated)...")
     t0 = time.time()
     glb_indices = match_faces_by_centroid(
         glb_verts_matched, glb_faces, obj_verts, obj_faces)
@@ -189,7 +189,7 @@ def process_glb(glb_path, obj_output, tex_output, tex_size=2048, dilate_iters=24
     print(f"  Colors: {n_white} white faces, {n_black} black faces")
 
     # Step 2: UV unwrap with xatlas
-    print(f"  UV unwrapping with xatlas...")
+    print("  UV unwrapping with xatlas...")
     t0 = time.time()
     new_verts, new_faces, new_normals, uvs, vmapping = uv_unwrap(verts, faces)
     print(f"  UV done in {time.time() - t0:.1f}s: "
@@ -268,7 +268,7 @@ def main():
     if args.existing_uv:
         print(f"  Mode: existing UV from {args.existing_uv}")
     else:
-        print(f"  Mode: xatlas UV unwrap")
+        print("  Mode: xatlas UV unwrap")
         os.makedirs(output_dir, exist_ok=True)
 
     results = []
@@ -298,7 +298,7 @@ def main():
                 ok = process_glb(glb_path, obj_path, tex_path,
                                  tex_size=args.tex_size, dilate_iters=args.dilate)
             results.append((out_name, ok))
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
             results.append((out_name, False))
@@ -311,7 +311,7 @@ def main():
     proj_tex = os.path.expanduser(
         "~/ros2/simu/astribot_simulation/astribot_descriptions/"
         "urdf/astribot_s1_urdf/meshes/textures/")
-    print(f"\nTo apply to simulation:")
+    print("\nTo apply to simulation:")
     print(f"  cp {texture_dir}/*.png {proj_tex}")
     if not args.existing_uv:
         proj_obj = os.path.expanduser(

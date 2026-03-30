@@ -16,17 +16,15 @@ import os
 import copy
 import time
 import numpy as np
-import math
 from abc import ABC, abstractmethod
 
 import gymnasium as gym
 from gymnasium import spaces
 
-from cv_bridge import CvBridge, CvBridgeError
-import open3d as o3d
+from cv_bridge import CvBridge
 
-from simu_utils.simu_common_tools import SimuCommonTools, astribot_simu_log
-from simu_utils.robot_ros_interface import MultiRobotRosInterface
+from src.simu_utils.simu_common_tools import SimuCommonTools, astribot_simu_log
+from src.simu_utils.robot_ros_interface import MultiRobotRosInterface
 
 from geometry_msgs.msg import WrenchStamped, Quaternion
 from sensor_msgs.msg import Imu, PointCloud2, PointField
@@ -40,7 +38,6 @@ elif ros_version=='2':
     import rclpy
     from rclpy.node import Node
     from tf_transformations import quaternion_from_matrix
-    from rclpy.executors import MultiThreadedExecutor
 
 class AstribotBaseEnv(gym.Env, ABC):
     
@@ -196,7 +193,7 @@ class AstribotBaseEnv(gym.Env, ABC):
         
         for pose_tuple in pose_tuple_list:
             if len(pose_tuple) > 0 and pose_tuple[2] in self.object_names:
-                object_pose = self.pose_add(self.get_chassis_pose(), pose_tuple[0])
+                _ = self.pose_add(self.get_chassis_pose(), pose_tuple[0])
                 if pose_tuple[3]:
                     self.set_body_pose(pose_tuple[2], pose=pose_tuple[0], twist=pose_tuple[1])
                     pose_list = list(pose_tuple) 
@@ -314,7 +311,7 @@ class AstribotBaseEnv(gym.Env, ABC):
         return joint_names_all,controller_mode_list, joint_position_command_all, joint_velocity_command_all, joint_torque_command_all
 
     def update_trajectory_pose(self, trajectory=False):
-        if self.update_trajectory_map != None:
+        if self.update_trajectory_map is not None:
             for robot_name, trajectory_pose_names in self.update_trajectory_map.items():
 
                 if trajectory is False:

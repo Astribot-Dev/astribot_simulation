@@ -15,17 +15,16 @@ Brief: ros interface for simulation
 import os
 import copy
 import json
-import numpy as np
 from typing import Any, Dict, List
-from functools import partial
   
 from astribot_msgs.srv import RawRequest 
 
-from astribot_msgs.msg import RobotJointState, RobotJointController, DoubleArray, RobotVisualStates, RobotCartesianState, RobotCartesianStates
-from geometry_msgs.msg import Pose, WrenchStamped, Quaternion, TransformStamped
-from sensor_msgs.msg import Image, CompressedImage, CameraInfo, Imu, JoyFeedback, PointCloud2
+from astribot_msgs.msg import RobotJointState, RobotJointController, DoubleArray, RobotVisualStates, RobotCartesianState
+from geometry_msgs.msg import Pose, WrenchStamped, TransformStamped
+from sensor_msgs.msg import Image, Imu, PointCloud2
 
-from simu_utils.simu_common_tools import astribot_simu_log
+from src.simu_utils.chassis_kinematics import ChassisKinematics
+from src.simu_utils.simu_common_tools import astribot_simu_log
 
 ros_version = os.getenv('ROS_VERSION')
 if ros_version=='1':
@@ -33,10 +32,9 @@ if ros_version=='1':
     import tf
     from std_srvs.srv import Empty, EmptyResponse
 elif ros_version=='2':
-    import rclpy 
     from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy
     from rclpy.duration import Duration   
-    from tf2_ros import TransformBroadcaster, Buffer, TransformListener
+    from tf2_ros import TransformBroadcaster
     from std_srvs.srv import Empty
 
 class MultiRobotRosInterface(object):
@@ -136,7 +134,7 @@ class MultiRobotRosInterface(object):
         elif ros_version=='2':
             return response
     
-    def handle_object_pose_command(self, req: Any):
+    def handle_object_pose_command(self, req: Any, response=None):
         try:
             data: Dict[str, List[float]] = json.loads(req.request)
 
@@ -157,8 +155,14 @@ class MultiRobotRosInterface(object):
         except Exception as e:
             response_message = "Error: " + str(e)
 
-        response.response = response_message
-        return response
+        if ros_version == '2':
+            response.response = response_message
+            return response
+        else:
+            from astribot_msgs.srv import RawRequestResponse
+            resp = RawRequestResponse()
+            resp.response = response_message
+            return resp
     
     def publish_object_pose(self, pose, object_name):
         if ros_version=='1':
@@ -269,10 +273,16 @@ class RobotRosInterface(object):
         self.joint_states_msg.acceleration = [0.0 for i in range(self.dof)]
         self.joint_states_msg.torque = [0.0 for i in range(self.dof)]
 
+        if self.is_two_wheel_chassis():
+            self.kinematics = ChassisKinematics(wheel_radius=0.2 / 2, wheel_distance=0.27 * 2)
+        
         self.controller_mode = 1
 
     def get_controller_mode(self):
         return self.controller_mode
+    
+    def is_two_wheel_chassis(self):
+        return 'chassis' in self.robot_name and self.dof == 2
 
     def joint_command_callback(self, msg):
         joint_position_command = [0 for i in range(self.dof)]
@@ -296,9 +306,14 @@ class RobotRosInterface(object):
             joint_torque_command = list(msg.command)
             self.controller_mode = 3
 
-        self.joint_position_command = joint_position_command
-        self.joint_velocity_command = joint_velocity_command
-        self.joint_torque_command = joint_torque_command
+        if self.is_two_wheel_chassis():
+            self.joint_position_command = self.kinematics.cartesian_to_motor(joint_position_command)
+            self.joint_velocity_command = self.kinematics.cartesian_to_motor(joint_velocity_command)
+            self.joint_torque_command = self.kinematics.torque_cartesian_to_motor(joint_torque_command)
+        else:
+            self.joint_position_command = joint_position_command
+            self.joint_velocity_command = joint_velocity_command
+            self.joint_torque_command = joint_torque_command
             
     def endpoint_desired_states_callback(self, msg):
         self.endpoint_desired_pose = [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z,
@@ -322,10 +337,16 @@ class RobotRosInterface(object):
             self.joint_states_msg.header.stamp = RobotRosInterface.get_timestamp(self.node)
             self.joint_states_msg.header.frame_id = 'simulation'
 
-            self.joint_states_msg.position = position
-            self.joint_states_msg.velocity = velocity
-            self.joint_states_msg.acceleration = acceleration
-            self.joint_states_msg.torque = torque
+            if self.is_two_wheel_chassis():
+                self.joint_states_msg.position = self.kinematics.motor_to_cartesian(position)
+                self.joint_states_msg.velocity = self.kinematics.motor_to_cartesian(velocity)
+                self.joint_states_msg.acceleration = self.kinematics.motor_to_cartesian(acceleration)
+                self.joint_states_msg.torque = self.kinematics.torque_motor_to_cartesian(torque)
+            else:
+                self.joint_states_msg.position = position
+                self.joint_states_msg.velocity = velocity
+                self.joint_states_msg.acceleration = acceleration
+                self.joint_states_msg.torque = torque
 
             self.joint_states_pub.publish(self.joint_states_msg)
         else:
@@ -349,7 +370,7 @@ class RobotRosInterface(object):
             self.chassis_pose_ros_pub.publish(msg)
 
     def joint_states_callback(self, msg):
-        if self.simu_running == True:
+        if self.simu_running:
             if (msg.header.frame_id != 'simulation') & ('gripper' not in self.robot_name):
                 self.simu_running = False
                 if ros_version=='1':
@@ -358,9 +379,17 @@ class RobotRosInterface(object):
                     self.node.destroy_subscription(self.joint_command_sub)
                 astribot_simu_log("real robot running, disable simulation running", self.robot_name)
         else:
-            self.joint_position_command = msg.position
-            self.joint_velocity_command = msg.velocity
-            self.joint_torque_command = msg.torque
+            if self.is_two_wheel_chassis():
+                motor_position = self.kinematics.cartesian_to_motor(msg.position)
+                motor_velocity = self.kinematics.cartesian_to_motor(msg.velocity)
+                motor_torque = self.kinematics.torque_cartesian_to_motor(msg.torque)
+                self.joint_position_command = motor_position
+                self.joint_velocity_command = motor_velocity
+                self.joint_torque_command = motor_torque
+            else:
+                self.joint_position_command = msg.position
+                self.joint_velocity_command = msg.velocity
+                self.joint_torque_command = msg.torque
 
     def publish_force_torque_sensor(self, force_torque):
 

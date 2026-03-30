@@ -20,8 +20,8 @@ import torch
 
 import genesis as gs
 
-from simu_utils.simu_common_tools import astribot_simu_log
-from astribot_envs.astribot_base_env import AstribotBaseEnv
+from src.simu_utils.simu_common_tools import astribot_simu_log
+from src.astribot_envs.astribot_base_env import AstribotBaseEnv
 
 class AstribotGenesisEnv(AstribotBaseEnv):
     def __init__(self, param):
@@ -65,7 +65,7 @@ class AstribotGenesisEnv(AstribotBaseEnv):
         
     def step(self, action: np.ndarray) -> tuple:
         self.update_reset_flag()
-        if self.reset_flag == False:
+        if not self.reset_flag:
             step_begin_time=time.time()
             self.joint_names_all,self.controller_mode, self.joint_position_command_all, self.joint_velocity_command_all, self.joint_torque_command_all = self.update_joint_states()
             self.joint_names_all,self.controller_mode, self.joint_position_command_all, self.joint_velocity_command_all, self.joint_torque_command_all = self.reindex_states_data()

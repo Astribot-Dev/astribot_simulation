@@ -19,13 +19,12 @@ import random
 import math
 import numpy as np
 import cv2
-from cv_bridge import CvBridge, CvBridgeError
 
 import mujoco
 from gymnasium.envs.mujoco.mujoco_rendering import MujocoRenderer
 
-from simu_utils.simu_common_tools import astribot_simu_log
-from astribot_envs.astribot_base_env import AstribotBaseEnv
+from src.simu_utils.simu_common_tools import astribot_simu_log
+from src.astribot_envs.astribot_base_env import AstribotBaseEnv
 
 class AstribotMujocoEnv(AstribotBaseEnv):
     def __init__(self, param):
@@ -57,7 +56,7 @@ class AstribotMujocoEnv(AstribotBaseEnv):
      
     def step(self, action: np.ndarray) -> tuple:
         self.update_reset_flag()
-        if self.reset_flag == False:
+        if not self.reset_flag:
             step_begin_time=time.time()
             self.joint_names_all,self.controller_mode, self.joint_position_command_all, self.joint_velocity_command_all, self.joint_torque_command_all= self.update_joint_states()
             self.update_object_states()
@@ -253,7 +252,7 @@ class AstribotMujocoEnv(AstribotBaseEnv):
             self.data.qpos[:] = self.initial_qpos
             self.data.qvel[:] = self.initial_qvel
             astribot_simu_log("Reset from keyframe successfully")
-        except:
+        except Exception:
             astribot_simu_log("reset_from_keyframe none","WARN")
         
         astribot_simu_log("Pressing the backspace key resets the robot simulator state, but can only be triggered once per second")
@@ -631,7 +630,7 @@ class AstribotMujocoEnv(AstribotBaseEnv):
                 self.data.qpos[qposadr:qposadr+7] = pose
             if twist is not None:
                 self.data.qvel[qveladr:qveladr+6] = twist
-        except:
+        except Exception:
             pass
 
     def set_camera_pose(self, camera_name, pose):

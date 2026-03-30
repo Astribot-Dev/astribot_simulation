@@ -43,13 +43,13 @@ def convert_one(mesh_name):
     print(f"    {len(positions)} verts, {len(faces)} faces, has_colors={has_colors}")
 
     if not has_colors:
-        print(f"  WARNING: No vertex colors in OBJ. Using default white.")
+        print("  WARNING: No vertex colors in OBJ. Using default white.")
 
     os.makedirs(DAE_DIR, exist_ok=True)
     out_path = os.path.join(DAE_DIR, f"{mesh_name}.dae")
     print(f"  Writing DAE: {out_path}")
     write_dae_vertex_color(out_path, positions, colors, normals, faces)
-    print(f"  Done!")
+    print("  Done!")
     return True
 
 
@@ -82,7 +82,7 @@ def main():
 
     print("=" * 50)
     print(f"DAE files saved to: {DAE_DIR}")
-    print(f"\nIn URDF, replace STL references with DAE:")
+    print("\nIn URDF, replace STL references with DAE:")
     print(f'  <mesh filename="package://xxx/meshes/dae/{mesh_names[0]}.dae"/>')
 
 

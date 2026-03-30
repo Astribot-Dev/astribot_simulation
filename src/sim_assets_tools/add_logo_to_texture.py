@@ -247,7 +247,7 @@ def main():
     proj_tex = os.path.expanduser(
         "~/ros2/simu/astribot_simulation/astribot_descriptions/"
         "urdf/astribot_s1_urdf/meshes/textures/")
-    print(f"\nTo apply to simulation:")
+    print("\nTo apply to simulation:")
     print(f"  cp {output_path} {proj_tex}")
 
 

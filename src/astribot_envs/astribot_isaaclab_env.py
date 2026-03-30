@@ -12,7 +12,6 @@ from __future__ import annotations
 import os
 import sys
 import time
-import copy
 import numpy as np
 from typing import Optional, Dict, List, TYPE_CHECKING
 
@@ -33,8 +32,8 @@ for logger_name in ["omni", "isaac", "carb", "omni.kit", "omni.isaac",
 
 from isaaclab.app import AppLauncher
 
-from simu_utils.simu_common_tools import astribot_simu_log
-from astribot_envs.astribot_base_env import AstribotBaseEnv
+from src.simu_utils.simu_common_tools import astribot_simu_log
+from src.astribot_envs.astribot_base_env import AstribotBaseEnv
 
 if TYPE_CHECKING:
     from isaaclab.assets import ArticulationCfg
@@ -320,7 +319,6 @@ class AstribotIsaacLabEnv(AstribotBaseEnv):
         import torch
 
         joint_position_targets = torch.zeros(self.robot.num_joints, device=self.device)
-        joint_velocity_targets = torch.zeros(self.robot.num_joints, device=self.device)
         joint_effort_targets = torch.zeros(self.robot.num_joints, device=self.device)
 
         for joint_id, mode in enumerate(self.controller_mode):
@@ -506,7 +504,7 @@ class AstribotIsaacLabEnv(AstribotBaseEnv):
             pos = self.robot.data.body_pos_w[0, link_idx].cpu().numpy()
             quat = self.robot.data.body_quat_w[0, link_idx].cpu().numpy()
             return np.concatenate([pos, quat])
-        except:
+        except Exception:
             return np.array([0, 0, 0, 1, 0, 0, 0])
 
     def get_body_pose(self, body_name: str = None) -> np.ndarray:

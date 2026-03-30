@@ -16,21 +16,19 @@ import os
 import numpy as np
 import torch
 
-import sapien
 import sapien.core as sapien
 sapien.set_log_level("error")
 from mani_skill.agents.base_agent import BaseAgent, Keyframe
 from mani_skill.agents.controllers import *
 from mani_skill.agents.registration import register_agent
 from mani_skill.sensors.camera import CameraConfig
-from mani_skill.utils.structs import Pose
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
 
-from simu_utils.simu_common_tools import astribot_simu_log
-from astribot_envs.astribot_base_env import AstribotBaseEnv
+from src.simu_utils.simu_common_tools import astribot_simu_log
+from src.astribot_envs.astribot_base_env import AstribotBaseEnv
 
 @register_agent()
 class AstribotAgent(BaseAgent):
@@ -379,7 +377,7 @@ class AstribotManiskillEnv(BaseEnv, AstribotBaseEnv):
 
     def step(self,action=None):
         self.update_reset_flag()
-        if self.reset_flag == False:
+        if not self.reset_flag:
 
             self.joint_names_all,self.controller_mode, self.joint_position_command_all, self.joint_velocity_command_all, self.joint_torque_command_all = self.update_joint_states()
             self.joint_names_all,self.controller_mode, self.joint_position_command_all, self.joint_velocity_command_all, self.joint_torque_command_all = self.reindex_states_data()

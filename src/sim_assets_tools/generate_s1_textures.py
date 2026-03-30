@@ -10,7 +10,6 @@ import os
 import numpy as np
 import trimesh
 import xatlas
-from PIL import Image
 
 from lib.constants import (COLOR_WHITE_SHELL, COLOR_BLACK_VISOR,
                            COLOR_DARK_MECHANISM, COLOR_CHASSIS_TOP,

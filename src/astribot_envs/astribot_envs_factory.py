@@ -25,19 +25,18 @@ if ros_version=='1':
     import rospy
 elif ros_version=='2':
     import rclpy
-    from rclpy.executors import SingleThreadedExecutor
     
 class AstribotEnvsFactory:
     def __init__(self):
         self.astribot_simu_env=None
 
     def create_simulation_env(self,data):
-        module_name = f"astribot_envs.astribot_{data['simulator_type'].lower()}_env"
+        module_name = f"src.astribot_envs.astribot_{data['simulator_type'].lower()}_env"
         class_name = f"Astribot{data['simulator_type']}Env"
 
         try:
             module = importlib.import_module(module_name)
-            simulator_class = getattr(module, class_name)
+            _ = getattr(module, class_name)  # Trigger module registration
             gym_env_name=f"astribot_envs/{class_name}-v0"
             self.astribot_simu_env=gymnasium.make(gym_env_name,param=data)
 
@@ -45,7 +44,7 @@ class AstribotEnvsFactory:
             is_isaaclab = hasattr(self.astribot_simu_env.unwrapped, 'simulation_app')
 
             if is_isaaclab:
-                from simu_utils.simu_common_tools import astribot_simu_log
+                from src.simu_utils.simu_common_tools import astribot_simu_log
                 astribot_simu_log("Isaac Lab detected - will run in main thread (GUI requires main thread)")
                 # Don't start background thread for Isaac Lab
                 # Main thread will be blocked in simu_env_loop()
@@ -95,7 +94,7 @@ class AstribotEnvsFactory:
         if is_isaaclab:
             # Isaac Lab specific loop - use app.is_running() instead of ROS rate
             # The simulation_app must control the loop timing
-            from simu_utils.simu_common_tools import astribot_simu_log
+            from src.simu_utils.simu_common_tools import astribot_simu_log
             astribot_simu_log("Using Isaac Lab loop mode (app controls timing)")
 
             # For ROS2, we still need to setup the executor (but not rate)
