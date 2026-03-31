@@ -438,7 +438,7 @@ class AstribotIsaacLabEnv(AstribotBaseEnv):
         if self.render_mode == "human":
             pass
         elif self.render_mode == "rgb_array":
-            return self.update_camera_data()
+            self.trigger_async_camera_update()
 
     def close(self):
         astribot_simu_log("Closing Isaac Lab environment...")
@@ -533,3 +533,10 @@ class AstribotIsaacLabEnv(AstribotBaseEnv):
             'point_cloud': None
         }
         return data
+
+    def render_single_camera(self, camera_name):
+        return {
+            'rgb_img': None,
+            'depth_img': None,
+            'point_cloud': None
+        }

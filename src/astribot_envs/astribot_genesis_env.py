@@ -157,10 +157,9 @@ class AstribotGenesisEnv(AstribotBaseEnv):
         return robot_info
     
     def render(self):
-        # astribot_simu_log("Render genesis env")
         self.scene.visualizer.update()
         self.update_camera_pose()
-        return self.update_camera_data()
+        self.trigger_async_camera_update()
 
     def close(self):
         pass
@@ -398,4 +397,28 @@ class AstribotGenesisEnv(AstribotBaseEnv):
         for i in names:
             tor.append(self.get_joint_torque(i))
         return tor
+
+    def render_single_camera(self, camera_name):
+        try:
+            render_data = None
+            if camera_name == 'astribot_head':
+                render_data = self.head_camera.render(rgb=True)
+            elif camera_name == 'astribot_arm_right_effector':
+                render_data = self.right_camera.render(rgb=True)
+            elif camera_name == 'astribot_arm_left_effector':
+                render_data = self.left_camera.render(rgb=True)
+            elif camera_name == 'astribot_global_camera':
+                render_data = self.global_camera.render(rgb=True)
+
+            if render_data is not None:
+                rgb_img = cv2.cvtColor(render_data, cv2.COLOR_RGB2BGR)
+                return {
+                    'rgb_img': rgb_img,
+                    'depth_img': None,
+                    'point_cloud': None
+                }
+            return None
+        except Exception as e:
+            astribot_simu_log(f"Error rendering {camera_name}: {e}", "ERROR")
+            return None
 

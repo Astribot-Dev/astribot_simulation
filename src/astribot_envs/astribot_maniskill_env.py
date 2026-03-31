@@ -412,9 +412,9 @@ class AstribotManiskillEnv(BaseEnv, AstribotBaseEnv):
                     self.agent.robot.set_qf(force_ctrl_data)
 
                 super().step(action=None)
-                
+
             self.render()
-            self.update_camera_data()
+            self.trigger_async_camera_update()
             
         else:
             self.reset(seed=0)
@@ -454,3 +454,26 @@ class AstribotManiskillEnv(BaseEnv, AstribotBaseEnv):
 
     def get_chassis_pose(self):
         return [0, 0, 0, 1, 0, 0, 0]
+
+    def render_single_camera(self, camera_name):
+        try:
+            sensor_images = self.get_sensor_images()
+            if not sensor_images or camera_name not in sensor_images:
+                return None
+
+            camera_images = sensor_images[camera_name]
+            if 'rgb' not in camera_images:
+                return None
+
+            rgb_img = camera_images['rgb']
+            if isinstance(rgb_img, torch.Tensor):
+                rgb_img = rgb_img.cpu().numpy().squeeze()
+
+            return {
+                'rgb_img': rgb_img,
+                'depth_img': None,
+                'point_cloud': None
+            }
+        except Exception as e:
+            astribot_simu_log(f"Error rendering {camera_name}: {e}", "ERROR")
+            return None

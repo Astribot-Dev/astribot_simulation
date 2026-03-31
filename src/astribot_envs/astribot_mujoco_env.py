@@ -241,11 +241,45 @@ class AstribotMujocoEnv(AstribotBaseEnv):
         if self.render_mode=="human":
             self.mujoco_renderer.render("human")
         elif self.render_mode=="rgb_array":
-            return self.update_camera_data()
+            self.trigger_async_camera_update()
 
     def close(self):
         if self.mujoco_renderer is not None:
             self.mujoco_renderer.close()
+        self.shutdown_async_camera_rendering()
+
+    def render_single_camera(self, camera_name):
+        try:
+            if camera_name not in self.camera_dict:
+                return None
+
+            renderer = self.camera_dict[camera_name]
+            rgb_img = renderer.render("rgb_array")
+            depth_img = renderer.render("depth_array")
+
+            width, height = 640, 480
+            if camera_name == 'head_rgbd':
+                width, height = 1280, 720
+            elif camera_name in ('left_wrist_rgbd', 'right_wrist_rgbd'):
+                width, height = 640, 360
+
+            target_size = (width, height)
+            rgb_img = cv2.resize(rgb_img, target_size, interpolation=cv2.INTER_LINEAR)
+            rgb_img = cv2.flip(rgb_img, 0)
+
+            depth_img = cv2.resize(depth_img, target_size, interpolation=cv2.INTER_LINEAR)
+            depth_img = cv2.flip(depth_img, 0)
+
+            point_cloud = self.trans_depth_image_to_point_cloud(depth_img, height, width, camera_name)
+
+            return {
+                'rgb_img': rgb_img,
+                'depth_img': depth_img,
+                'point_cloud': point_cloud
+            }
+        except Exception as e:
+            astribot_simu_log(f"Error rendering {camera_name}: {e}", "ERROR")
+            return None
 
     def reset_from_keyframe(self):
         try:
@@ -543,38 +577,6 @@ class AstribotMujocoEnv(AstribotBaseEnv):
         assert self.has_body(body_name), "Name mistaken"
         return self.data.body(body_name).xquat.copy()
 
-    def get_camera_image(self, camera_name='top'):
-        
-        rgb_img=self.camera_dict[camera_name].render("rgb_array")
-        depth_img=self.camera_dict[camera_name].render("depth_array")
-
-        width=640
-        height=480
-        target_size=(width, height)
-
-        if camera_name=='head_rgbd':
-            width=1280
-            height=720
-            target_size=(width, height)
-        elif camera_name in ('left_wrist_rgbd', 'right_wrist_rgbd'):
-            width=640
-            height=360
-            target_size=(width, height)
-
-        rgb_img = cv2.resize(rgb_img, target_size, interpolation=cv2.INTER_LINEAR)
-        depth_img = cv2.resize(depth_img, target_size, interpolation=cv2.INTER_LINEAR)
-
-        rgb_img = cv2.flip(rgb_img, 0)
-        depth_img=cv2.flip(depth_img, 0)
-        point_cloud=self.trans_depth_image_to_point_cloud(depth_img, height, width, camera_name)
-
-        data={}
-        data['rgb_img'] = rgb_img
-        data['depth_img'] = depth_img
-        data['point_cloud'] = point_cloud
-
-        return data
-    
     def get_near_and_far(self):
         extent = self.model.stat.extent
         near = self.model.vis.map.znear * extent

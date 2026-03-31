@@ -15,6 +15,8 @@ Brief: Base env for simulation
 import os
 import copy
 import time
+import threading
+import queue
 import numpy as np
 from abc import ABC, abstractmethod
 
@@ -79,6 +81,8 @@ class AstribotBaseEnv(gym.Env, ABC):
         self.setup_joint_interface()
 
         self.real_time_fps=50
+
+        self.setup_async_camera_rendering()
 
     @abstractmethod
     def reset(self, seed=None, options=None) -> tuple:
@@ -203,67 +207,99 @@ class AstribotBaseEnv(gym.Env, ABC):
 
         return pose_tuple_list
 
-    def update_camera_data(self):
-        camera_data_list=[]
+    def setup_async_camera_rendering(self):
+        self.camera_render_queue = queue.Queue()
+        self.camera_rendering_active = True
+        if len(self.camera_names) > 0:
+            self.camera_render_thread = threading.Thread(
+                target=self._camera_render_worker,
+                daemon=True
+            )
+            self.camera_render_thread.start()
+            astribot_simu_log("Async camera rendering enabled with single worker thread")
+
+    def _camera_render_worker(self):
+        while self.camera_rendering_active:
+            try:
+                camera_name = self.camera_render_queue.get(timeout=0.1)
+                camera_data = self.render_single_camera(camera_name)
+                if camera_data is not None:
+                    self._publish_camera_data(camera_name, camera_data)
+                self.camera_render_queue.task_done()
+            except queue.Empty:
+                continue
+            except Exception as e:
+                astribot_simu_log(f"Camera render error [{camera_name}]: {e}", "ERROR")
+
+    def trigger_async_camera_update(self):
+        if not self.camera_rendering_active:
+            return
         for camera_name in self.camera_names:
-            camera_data = self.get_camera_image(camera_name=camera_name)
-            if camera_data and 'rgb_img' in camera_data:
+            try:
+                self.camera_render_queue.put_nowait(camera_name)
+            except queue.Full:
+                pass
 
-                rgb = camera_data['rgb_img']
-                if isinstance(rgb, np.ndarray) and rgb.size > 0:
-                    rgb_msg = self.cv_bridge.cv2_to_imgmsg(rgb, "rgb8")
-                    rgb_msg.header.stamp = self.multi_robot_ros_interface.get_timestamp()
-                    rgb_msg.header.frame_id = 'simulation'
-                    self.multi_robot_ros_interface.camera_raw_ros_pub[camera_name].publish(rgb_msg)
+    @abstractmethod
+    def render_single_camera(self, camera_name):
+        pass
 
-                depth = camera_data['depth_img']
-                if isinstance(depth, np.ndarray) and depth.size > 0:
-                    depth_msg = self.cv_bridge.cv2_to_imgmsg(depth, "32FC1")
-                    depth_msg.header.stamp = self.multi_robot_ros_interface.get_timestamp()
-                    depth_msg.header.frame_id = 'simulation'
-                    self.multi_robot_ros_interface.camera_depth_ros_pub[camera_name].publish(depth_msg)
-                
-                point_cloud = camera_data['point_cloud']
-                if point_cloud is not None:
+    def _publish_camera_data(self, camera_name, camera_data):
+        rgb = camera_data.get('rgb_img')
+        if isinstance(rgb, np.ndarray) and rgb.size > 0:
+            rgb_msg = self.cv_bridge.cv2_to_imgmsg(rgb, "rgb8")
+            rgb_msg.header.stamp = self.multi_robot_ros_interface.get_timestamp()
+            rgb_msg.header.frame_id = 'simulation'
+            self.multi_robot_ros_interface.camera_raw_ros_pub[camera_name].publish(rgb_msg)
 
-                    if ros_version=='1':
-                        point_cloud_msg = PointCloud2()
-                        point_cloud_msg.header.stamp = self.multi_robot_ros_interface.get_timestamp()
-                        point_cloud_msg.header.frame_id = 'simulation'
-                        point_cloud_msg.height = 1
-                        point_cloud_msg.width = len(point_cloud.points)
+        depth = camera_data.get('depth_img')
+        if isinstance(depth, np.ndarray) and depth.size > 0:
+            depth_msg = self.cv_bridge.cv2_to_imgmsg(depth, "32FC1")
+            depth_msg.header.stamp = self.multi_robot_ros_interface.get_timestamp()
+            depth_msg.header.frame_id = 'simulation'
+            self.multi_robot_ros_interface.camera_depth_ros_pub[camera_name].publish(depth_msg)
 
-                        point_cloud_msg.fields = [PointField('x', 0, PointField.FLOAT32, 1),
-                                            PointField('y', 4, PointField.FLOAT32, 1),
-                                            PointField('z', 8, PointField.FLOAT32, 1),
-                                            ]
-                        point_cloud_msg.is_bigendian = False
-                        point_cloud_msg.point_step = 12 
-                        point_cloud_msg.row_step = point_cloud_msg.point_step * point_cloud_msg.width
-                        point_cloud_msg.is_dense = False
-                        point_cloud_msg.data = np.asarray(point_cloud.points).astype(np.float32).tostring()
-                    elif ros_version=='2':
+        point_cloud = camera_data.get('point_cloud')
+        if point_cloud is not None:
+            if ros_version == '1':
+                point_cloud_msg = PointCloud2()
+                point_cloud_msg.header.stamp = self.multi_robot_ros_interface.get_timestamp()
+                point_cloud_msg.header.frame_id = 'simulation'
+                point_cloud_msg.height = 1
+                point_cloud_msg.width = len(point_cloud.points)
+                point_cloud_msg.fields = [
+                    PointField('x', 0, PointField.FLOAT32, 1),
+                    PointField('y', 4, PointField.FLOAT32, 1),
+                    PointField('z', 8, PointField.FLOAT32, 1),
+                ]
+                point_cloud_msg.is_bigendian = False
+                point_cloud_msg.point_step = 12
+                point_cloud_msg.row_step = point_cloud_msg.point_step * point_cloud_msg.width
+                point_cloud_msg.is_dense = False
+                point_cloud_msg.data = np.asarray(point_cloud.points).astype(np.float32).tostring()
+            elif ros_version == '2':
+                point_cloud_msg = PointCloud2()
+                point_cloud_msg.header = Header()
+                point_cloud_msg.header.stamp = self.multi_robot_ros_interface.get_timestamp()
+                point_cloud_msg.header.frame_id = 'simulation'
+                point_cloud_msg.height = 1
+                point_cloud_msg.width = len(point_cloud.points)
+                point_cloud_msg.fields = [
+                    PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+                    PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+                    PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
+                ]
+                point_cloud_msg.is_bigendian = False
+                point_cloud_msg.point_step = 12
+                point_cloud_msg.row_step = point_cloud_msg.point_step * point_cloud_msg.width
+                point_cloud_msg.is_dense = False
+                point_cloud_msg.data = np.asarray(point_cloud.points, dtype=np.float32).tobytes()
+            self.multi_robot_ros_interface.camera_point_cloud_ros_pub[camera_name].publish(point_cloud_msg)
 
-                        point_cloud_msg = PointCloud2()
-                        point_cloud_msg.header = Header()
-                        point_cloud_msg.header.stamp = self.multi_robot_ros_interface.get_timestamp()
-                        point_cloud_msg.header.frame_id = 'simulation'
-                        point_cloud_msg.height = 1
-                        point_cloud_msg.width = len(point_cloud.points)
-                        point_cloud_msg.fields = [
-                            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
-                            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
-                            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
-                        ]
-                        point_cloud_msg.is_bigendian = False
-                        point_cloud_msg.point_step = 12  
-                        point_cloud_msg.row_step = point_cloud_msg.point_step * point_cloud_msg.width
-                        point_cloud_msg.is_dense = False
-                        point_cloud_msg.data = np.asarray(point_cloud.points, dtype=np.float32).tobytes()
-    
-                    self.multi_robot_ros_interface.camera_point_cloud_ros_pub[camera_name] .publish(point_cloud_msg)
-
-        return camera_data_list
+    def shutdown_async_camera_rendering(self):
+        self.camera_rendering_active = False
+        if hasattr(self, 'camera_render_thread'):
+            self.camera_render_thread.join(timeout=1.0)
 
     def update_joint_states(self):
         joint_position_command_all = list()
