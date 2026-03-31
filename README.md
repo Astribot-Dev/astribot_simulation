@@ -163,7 +163,10 @@ bash scripts/install.sh
 ### Launch Astribot Simulation:
 
 ```bash
+# (ROS1 only) activate conda env
 conda activate astribot_simu
+
+# run simulation
 source env.sh && python3 astribot_simulation.py
 ```
 
@@ -178,10 +181,10 @@ from src.astribot_envs.astribot_envs_factory import AstribotEnvsFactory
 
 def main(robot_type):
     # Load param from yaml, create a simulation env using the Factory Pattern
-    astribot_yaml_file=f'config/astribot_{robot_type}/simulation_mujoco_param.yaml'
+    astribot_yaml_file = f'config/astribot_s1/simulation_mujoco_param.yaml'
     astribot_envs_factory = AstribotEnvsFactory()
-    astribot_data=AstribotEnvsFactory.load_yaml_file(astribot_yaml_file)
-    _ = astribot_envs_factory.create_simulation_env(astribot_data)
+    astribot_data = AstribotEnvsFactory.load_yaml_file(astribot_yaml_file)
+    astribot_simulation_thread = astribot_envs_factory.create_simulation_env(astribot_data)
 ```
 
 ---
