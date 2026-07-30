@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+  floor scene (per-robot, t1 specific). Pure mjcf.
+  <include file="..."/> comes AFTER </worldbody> (mjcf schema rule).
+  Real path: astribot_scenes/t1/floor/scene.xml →
+  astribot_descriptions/astribot_t1/model/mjcf/robot/t1.xml
+-->
+<mujoco model="astribot_t1_floor_scene">
+    <compiler angle="radian" meshdir="../../../astribot_descriptions/astribot_t1/mesh" />
+    <visual>
+        <global azimuth="180" elevation="-26.57" fovy="100" />
+    </visual>
+    <statistic center="0 0 1" extent="2.236" />
+    <option impratio="100" integrator="implicit" timestep="0.005"
+             viscosity="0.1" gravity="0 0 -9.81" />
+    <asset>
+        <texture type="2d" name="groundplane" builtin="checker"
+                  rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+                  width="500" height="500" />
+        <material name="groundplane" texture="groundplane"
+                  texuniform="true" texrepeat="5 5" reflectance="0.2" />
+    </asset>
+    <worldbody>
+        <light pos="0 0 2.0" dir="0 0 -1" directional="true" />
+        <geom name="floor" size="0 0 0.05" type="plane" material="groundplane" />
+        <camera name="human" pos="2 0 2" xyaxes="0 1 0 -0.4472 0 0.8944" fovy="100" />
+    </worldbody>
+    <include file="../../../astribot_descriptions/astribot_t1/model/mjcf/robot/t1.xml" />
+</mujoco>

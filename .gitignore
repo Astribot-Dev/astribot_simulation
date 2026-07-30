@@ -1,0 +1,146 @@
+# 本地配置文件
+.config
+.settings
+.vscode/
+.tmp/
+
+# ---------------------------------------------------------------------------
+# 发布版收敛：scripts/ 表层只留环境安装脚本（install.sh / build.sh / lite_install/），
+# 环境测试在 scripts/verify/。以下开发期调试/实验/SLAM 脚本本地保留（文件仍在工作区），
+# 但不入仓。
+# ---------------------------------------------------------------------------
+scripts/debug/
+scripts/pipeline/
+scripts/slam/
+scripts/setup/
+scripts/depends/
+scripts/lite_install/
+scripts/verify/
+scripts/sensors/
+
+# Sensor calibration is not consumed by any code path (sensors are unsupported
+# in this release); keep it locally but out of the release tree.
+config/astribot_s1/sensor_calib.json
+
+# rosbag QoS override files: only used by the SLAM/debug scripts, which are not
+# part of the release. No code path loads them.
+config/bag_qos_override.yaml
+config/qos/
+
+# Internal development guide for AI assistants; not a release artifact.
+CLAUDE.md
+
+# Stray empty root __init__.py: packaging only looks under src/ (see
+# pyproject [tool.setuptools.packages.find]), and this makes the repo root
+# look importable as a package.
+/__init__.py
+
+# Immature backends: ManiSkill and Isaac Lab are not part of this release.
+# The factory resolves backends by module name, so dropping these files from
+# the tree is enough -- nothing imports them.
+src/astribot_envs/astribot_isaaclab_env.py
+src/astribot_envs/astribot_maniskill_env.py
+
+# IDE / AI-assistant working notes: internal, not release artifacts.
+.claude/
+.marscode/
+
+# CI and lint tooling: not mature enough to ship with the release build.
+# Files stay locally so development tooling keeps working.
+.gitlab-ci.yml
+.pre-commit-config.yaml
+.flake8
+
+config/astribot_a1_v02/
+astribot_scenes/a1_v02/
+config/astribot_t1_v2/
+astribot_scenes/t1_v2/
+
+
+tests/
+docs/design/
+docs/develop/
+docs/use_guide/
+docs/maniskill.gif
+camera_test_output.log
+
+bags/
+tmp/
+
+bags/s1_v2_sim_*/
+bags/s1_v2_big_*/
+bags/s1_v2_walls_*/
+bags/s1_v2_genesis_*/
+bags/s1_v2_mujoco_*/
+
+
+.coverage
+
+build/
+*.egg-info/
+astribot_msgs/install/    # colcon build output lives in the msg package, not the repo root
+devel/
+log/
+devel_isolated/
+
+astribot_descriptions/urdf/display.m
+docs/newton_backend_integration_plan.md
+docs/mujoco_model_integration_guide.md
+docs/genesis-upgrade-mapping-2026-05-28(1).pdf
+config/astribot_s0
+
+*.swp
+*.swo
+.thumbs
+.DS_Store
+
+*.log
+MUJOCO_LOG.TXT
+
+*.pyc
+__pycache__/
+
+
+*.ros
+*.rosinstall
+*.rosdep
+
+catkin_workspace/
+catkin_make/
+catkin_make_isolated/
+
+
+colcon_workspace/
+colcon_build/
+
+
+packages.xml
+
+
+*.idea/
+*.project
+*.cproject
+*.launches
+
+
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.xz
+*.7z
+
+# t1_v2 self-collision test configuration (not for production)
+# Generated from astribot_config, used only for performance benchmarking
+docs/t1_v2_selfcollision_impact.md
+
+# Test artifacts
+tests/benchmarks/.pytest_cache/
+tests/benchmarks/__pycache__/
+tests/benchmarks/T1V2_SELFCOLLISION_IMPACT.md
+
+# One-off scene generator, kept locally for reference only.
+# scene.xml / scene_kinematic.xml are the maintained source of truth (t1's
+# warehouse scene was derived from them), so re-running this would overwrite
+# hand-maintained files.
+astribot_scenes/s1/warehouse/gen_scene.py

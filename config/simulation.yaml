@@ -1,0 +1,152 @@
+# =============================================================================
+# Shared simulation configuration (simulation.yaml)
+# =============================================================================
+#
+# Robot-independent parameters. Every field here can be overridden by a robot
+# config at config/astribot_<robot>/sim.yaml.
+#
+# Merge order (low to high precedence):
+#   SimConfig defaults < simulation.yaml (this file) < sim.yaml (robot)
+#                      < backend_overrides.<backend> < environment variables
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# Physics engine
+# -----------------------------------------------------------------------------
+# Only the two meaningful rates are configured; frame_skip is derived in code by
+# simulation_constants.resolve_timing():
+#
+#   frame_skip = round(physics_hz / control_hz)
+#   dt         = 1 / physics_hz      (advance per physics step)
+#   sim_dt     = frame_skip * dt     (advance per env.step)
+#
+# Shipped default: physics_hz=200 + control_hz=50 -> dt=0.005s, frame_skip=4.
+#
+# Both backends share these values. MuJoCo overrides the MJCF timestep at
+# runtime, so the descriptions submodule is never edited.
+# Env var overrides: ASTRIBOT_PHYSICS_HZ / ASTRIBOT_CONTROL_HZ.
+# -----------------------------------------------------------------------------
+physics:
+  # Physics rate in Hz. Higher means more accurate contact/constraint solving,
+  # at proportionally more CPU cost. Must be >= control_hz.
+  # Typical values: 200 (default) | 500 | 1000.
+  physics_hz: 200
+
+  # Control / env-loop rate in Hz: how often SDK commands are applied and joint
+  # states are published. The real robot accepts 0-250Hz.
+  #
+  # This value applies to both backends (neither sim.yaml overrides it). The
+  # number of physics steps per second is fixed by physics_hz, so raising this
+  # does not add physics work -- but it does add one more env-step worth of
+  # Python, ROS publish and kernel-launch overhead. That overhead is much larger
+  # on Genesis: 50 -> 100 was measured to take t1 Genesis RTF from ~0.95 to
+  # ~0.48, while MuJoCo sustains 100 comfortably.
+  # Typical values: 50 (default) | 100 | 250. Override per run with
+  # ASTRIBOT_CONTROL_HZ.
+  control_hz: 50
+
+  # Gravity vector [x, y, z] in m/s^2. Use [0.0, 0.0, 0.0] for zero gravity.
+  gravity: [0.0, 0.0, -9.81]
+
+
+# -----------------------------------------------------------------------------
+# Sensor sampling frequencies (Hz)
+# -----------------------------------------------------------------------------
+# NOTE: sensors are NOT supported in this release. These values are placeholders
+# that keep the schema stable; nothing consumes them while the simulation runs
+# its default control-only profile.
+#
+# If sensors are enabled in a future release these act as *requested* rates: the
+# effective rate can never exceed physics_hz, and SensorScheduler clamps
+# anything higher with a warning instead of failing.
+# -----------------------------------------------------------------------------
+sensor_frequencies:
+  # LiDAR-integrated IMU. Valid range 1..physics_hz. MID-360 hardware is 200Hz.
+  imu: 200.0
+  # Chassis IMU. Valid range 1..physics_hz.
+  chassis_imu: 200.0
+  # LiDAR point cloud. MID-360 hardware specification is 10Hz.
+  lidar: 10.0
+  # Force/torque sensors. Typical 50-100Hz.
+  force_torque: 50.0
+
+
+# -----------------------------------------------------------------------------
+# Display and rendering
+# -----------------------------------------------------------------------------
+display:
+  # Render mode. Valid values:
+  #   human     - interactive GUI window (default)
+  #   rgb_array - off-screen rendering; needs cameras (unsupported in this release)
+  #   ''        - no rendering at all (fastest, for headless runs)
+  mode: human
+
+  # Window size in pixels, only used when mode is 'human'.
+  # Override at runtime with ASTRIBOT_VIEWER_W / ASTRIBOT_VIEWER_H.
+  width: 1920
+  height: 1080
+
+  # Target render frame rate in Hz. The on-screen window is throttled to ~17Hz
+  # anyway, because GLFW rendering dominates the loop cost.
+  # Override with ASTRIBOT_HUMAN_RENDER_HZ.
+  fps: 60
+
+
+# -----------------------------------------------------------------------------
+# ROS communication
+# -----------------------------------------------------------------------------
+ros:
+  # ROS2 domain id, valid range [0, 101]. Nodes only discover each other when
+  # their domain ids match, so use distinct values to isolate concurrent runs.
+  domain_id: 25
+
+  # QoS queue depth. Deeper queues tolerate slower subscribers at the cost of
+  # memory. Keep >= 100 for high-rate publishers.
+  qos_depth: 100
+
+  # QoS deadline in seconds: the interval within which a message is expected.
+  qos_deadline_sec: 0.5
+
+
+# -----------------------------------------------------------------------------
+# Motor controller configuration
+# -----------------------------------------------------------------------------
+controller_config:
+  # Global default PD gains
+  default_gains:
+    position:  # mode=1
+      kp: 100.0
+      kd: 10.0
+    velocity:  # mode=2
+      kp: 50.0
+      kd: 5.0
+    torque:    # mode=3
+      kp: 1.0
+      kd: 0.1
+
+  # Dynamics feedforward compensation (replaces gravity_compensation)
+  dynamics_compensation:
+    enabled: true
+    modes: [1, 2, 3]  # Enable in all control modes
+    components:
+      gravity: true      # g(q) - gravity term
+      coriolis: true     # C(q,qd)*qd - Coriolis and centrifugal forces
+      # M(q)*qdd, evaluated from the MEASURED qdd (same as the real robot's middle
+      # layer -- no desired acceleration involved). Implemented but off by default:
+      # qdd is a noisy second-order signal that couples with the controller output
+      # within the same step. Measured on a mode-1 step input it contributes
+      # +/-4 Nm during the transient with a sign flip, decaying to ~0 in steady
+      # state. Turn on only with a step-response test to back it up.
+      inertia: false
+      friction: false    # Friction (optional, not implemented)
+
+
+# -----------------------------------------------------------------------------
+# ROS topic names
+# -----------------------------------------------------------------------------
+# Only chassis_imu_topic is active in this release. The LiDAR topics are
+# placeholders for when the sensor pipeline becomes supported.
+imu_topic: "/livox/imu_front"
+lid_topic: "/livox/lidar_front"
+chassis_imu_topic: "/astribot_whole_body/chassis_imu"

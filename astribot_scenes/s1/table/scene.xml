@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+  table scene for s1 (aloha benchmark + LiDAR test environment).
+  Table at x=2.2 (PR-3 v3: pushed back so robot has ~1.6m clearance
+  for in-place yaw rotation), 3 static walls for LiDAR to hit, box_red
+  target object, overview camera for video capture.
+-->
+<mujoco model="astribot_s1_table_scene">
+    <compiler angle="radian" meshdir="../../../astribot_descriptions/astribot_s1/mesh" />
+    <option impratio="100" integrator="implicit" timestep="0.005" viscosity="0.1" gravity="0 0 -9.81" />
+    <visual>
+        <global offwidth="1280" offheight="720" azimuth="180" elevation="-26.57" fovy="100" />
+    </visual>
+    <statistic center="0 0 1" extent="2.236" />
+    <default>
+        <default class="viz_Wood_simpleTable">
+            <geom group="1" contype="0" conaffinity="0" type="mesh" material="M_Wood_simpleTable" />
+        </default>
+        <default class="body_simpleTable">
+            <geom group="1" contype="1" conaffinity="1" type="box" rgba="0.6 0.4 0.2 1" />
+        </default>
+    </default>
+    <asset>
+        <texture type="2d" name="groundplane" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" width="500" height="500" />
+        <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2" />
+        <texture name="T_Wood_simpleTable" type="cube" height="1" width="1" file="textures/wood.png" />
+        <material name="M_Wood_simpleTable" texture="T_Wood_simpleTable" rgba="0.8 0.8 0.8 1" shininess="0.2" reflectance="0.3" texuniform="false" />
+    </asset>
+    <worldbody>
+        <!-- table at x=2.2 (PR-3 v3 clearance) -->
+        <body pos="2.2 0 0" euler="0 0 1.5708" childclass="body_simpleTable">
+            <geom class="viz_Wood_simpleTable" type="box" size="0.7 0.375 0.025" pos="0 0 0.735" />
+            <geom class="viz_Wood_simpleTable" type="box" size="0.59 0.26 0.05" pos="0 0 0.66" />
+            <geom class="viz_Wood_simpleTable" type="box" size="0.025 0.025 0.305" pos="-0.565 0.235 0.305" />
+            <geom class="viz_Wood_simpleTable" type="box" size="0.025 0.025 0.305" pos="-0.565 -0.235 0.305" />
+            <geom class="viz_Wood_simpleTable" type="box" size="0.025 0.025 0.305" pos="0.565 0.235 0.305" />
+            <geom class="viz_Wood_simpleTable" type="box" size="0.025 0.025 0.305" pos="0.565 -0.235 0.305" />
+            <geom type="box" size="0.7 0.375 0.025" pos="0 0 0.735" mass="40" solimp="0.95 0.99 0.001" solref="0.005 1" />
+            <geom type="box" size="0.59 0.26 0.05" pos="0 0 0.66" />
+            <geom type="box" size="0.025 0.025 0.305" pos="-0.565 0.235 0.305" />
+            <geom type="box" size="0.025 0.025 0.305" pos="-0.565 -0.235 0.305" />
+            <geom type="box" size="0.025 0.025 0.305" pos="0.565 0.235 0.305" />
+            <geom type="box" size="0.025 0.025 0.305" pos="0.565 -0.235 0.305" />
+            <geom type="box" size="0.05 0.003 0.0015" pos="0.2 0.147 0.76" rgba="1 0 0 1" group="1" contype="1" conaffinity="1" />
+            <geom type="box" size="0.05 0.003 0.0015" pos="0.2 0.053 0.76" rgba="1 0 0 1" group="1" contype="1" conaffinity="1" />
+            <geom type="box" size="0.003 0.05 0.0015" pos="0.147 0.1 0.76" rgba="1 0 0 1" group="1" contype="1" conaffinity="1" />
+            <geom type="box" size="0.003 0.05 0.0015" pos="0.253 0.1 0.76" rgba="1 0 0 1" group="1" contype="1" conaffinity="1" />
+            <camera name="astribot_global_camera" pos="0 0.1 1.7" euler="0 0 0" fovy="60" />
+        </body>
+        <body name="box_red" pos="0.7 0.1 0.8">
+            <joint type="free" />
+            <geom type="box" size="0.02 0.02 0.02" rgba="1.0 0.0 0.0 1" friction="1.0 1.0 1.0" mass="0.5" contype="1" conaffinity="1" />
+        </body>
+        <!-- PR-3 PCD regen: 3 static walls around the table so the LiDAR
+             has something to hit. 1.5m tall, 10cm thick, static. -->
+        <geom name="wall_back" type="box" size="0.05 2.25 0.75" pos="3.0 0.0 0.75" rgba="0.6 0.6 0.6 1" contype="1" conaffinity="1" />
+        <geom name="wall_left" type="box" size="1.5 0.05 0.75" pos="1.5 -2.25 0.75" rgba="0.6 0.6 0.6 1" contype="1" conaffinity="1" />
+        <geom name="wall_right" type="box" size="1.5 0.05 0.75" pos="1.5 2.25 0.75" rgba="0.6 0.6 0.6 1" contype="1" conaffinity="1" />
+        <light pos="0 0 2.0" dir="0 0 -1" directional="true" />
+        <geom name="floor" size="0 0 0.05" type="plane" material="groundplane" />
+        <camera name="human" pos="2 0 2" xyaxes="0 1 0 -0.4472 0 0.8944" fovy="100" />
+        <!-- overview camera for video capture -->
+        <camera name="overview" pos="5.0 -5.0 3.5" xyaxes="0.707 0.707 0  -0.276 0.276 0.919" />
+    </worldbody>
+    <include file="../../../astribot_descriptions/astribot_s1/model/mjcf/robot/s1.xml" />
+</mujoco>

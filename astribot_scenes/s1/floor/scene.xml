@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+  floor scene for s1. Pure mjcf — floor + light + camera + robot.
+  The robot is included via a REAL relative path; mjcf's native
+  <include file="..."/> handles the nested includes.
+  <include> comes AFTER </worldbody> (mjcf schema rule).
+-->
+<mujoco model="astribot_s1_floor_scene">
+    <compiler angle="radian" meshdir="../../../astribot_descriptions/astribot_s1/mesh" />
+    <option impratio="100" integrator="implicit" timestep="0.005" viscosity="0.1" gravity="0 0 -9.81" />
+    <visual>
+        <global offwidth="1280" offheight="720" azimuth="180" elevation="-26.57" fovy="100" />
+    </visual>
+    <statistic center="0 0 1" extent="2.236" />
+    <asset>
+        <texture type="2d" name="groundplane" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" width="500" height="500" />
+        <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2" />
+    </asset>
+    <worldbody>
+        <light pos="0 0 2.0" dir="0 0 -1" directional="true" />
+        <geom name="floor" size="0 0 0.05" type="plane" material="groundplane" />
+        <camera name="human" pos="2 0 2" xyaxes="0 1 0 -0.4472 0 0.8944" fovy="100" />
+    </worldbody>
+    <include file="../../../astribot_descriptions/astribot_s1/model/mjcf/robot/s1.xml" />
+</mujoco>

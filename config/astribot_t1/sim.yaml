@@ -1,0 +1,283 @@
+# =============================================================================
+# Robot configuration: astribot_t1
+# =============================================================================
+# Merged on top of config/simulation.yaml (shared, robot-independent), then
+# overlaid by backend_overrides.<backend> below.
+#
+# INVARIANT: joint_names_list must match the MJCF actuator order 1:1, which is
+# the include order in the robot's MJCF:
+#   chassis (3) -> torso (4) -> head (2) -> arm_l (7) -> gripper_l (1)
+#   -> arm_r (7) -> gripper_r (1)
+# =============================================================================
+
+# Robot model id. Resolves the config dir (config/astribot_<robot_type>) and the
+# scene dir (astribot_scenes/<robot_type>). Do not change.
+robot_type: t1
+
+# Surroundings to load, resolved to
+# astribot_scenes/t1/<scene>/scene[_kinematic].xml.
+# Available for t1: floor (empty ground) | table
+scene: floor
+
+# true  - step() pins the 3 chassis DOFs to 0 every step (chassis welded in place)
+# false - the chassis follows SDK commands (default)
+chassis_fixed: false
+
+# Physics backend. Normally derived from the --backend CLI flag; this value is
+# only the fallback. Valid values: Mujoco | Genesis
+simulator_type: Mujoco
+
+# ROS node name and topic namespace prefix.
+robot_name: astribot_whole_body
+
+# -----------------------------------------------------------------------------
+# Chassis
+# -----------------------------------------------------------------------------
+# Drive type. Valid values:
+#   omni    - 4 omni wheels with +/-45 degree spin axes, driven through the
+#             OmniChassis adapter: a 3-DOF (x, y, yaw) pose command is expanded
+#             into 4 wheel speeds, so the SDK interface stays 3-DOF.
+# Omitting this makes the virtual joint chassis_x resolve against the MJCF, which
+# only declares chassis_free, and raises KeyError.
+chassis_type: omni
+
+# Default chassis model. Valid values:
+#   kinematic - virtual joints with visual-only wheels; cheaper and more stable
+#   dynamic   - real wheels and rollers with full contact dynamics
+# Overridden per backend below. The SDK interface is identical either way.
+chassis_model: kinematic
+
+omni:
+  # Wheel radius in m used for the inverse-kinematics gains only:
+  #   Kt = cos45 / wheel_radius        (translation gain)
+  #   Kr = Kt * (half_wheelbase + half_track)   (rotation gain)
+  # This is a calibration value, not a copy of any single MJCF dimension: the
+  # measured rolling radius (wheel centre height minus lowest roller contact)
+  # differs per robot because the roller collision primitives differ -- s1 uses
+  # spheres and measures 0.0800, t1 uses ellipsoids and measures 0.0755. 0.078
+  # sits between the two. The ~3% mismatch shows up only as a small open-loop
+  # velocity scale error; closed-loop pose control absorbs it via vel_scale.
+  wheel_radius: 0.078
+  # Half wheelbase (x) and half track (y) in m. Only their SUM enters the
+  # kinematics (Kr above), so the split between them does not matter.
+  # Measured wheel body positions are x=+/-0.2163 and y=+/-0.2163 (front) /
+  # +/-0.2113 (rear); half_track is the front/rear mean.
+  half_wheelbase: 0.216
+  half_track: 0.214
+  # MuJoCo only: freejoint whose qpos/qvel give the chassis pose and velocity.
+  base_joint_name: chassis_free
+  # Proportional gain from pose error to body velocity in the in-sim controller
+  # stub (not a physical property). Raise for a stiffer response, lower to reduce
+  # overshoot. Typical range 5.0-20.0.
+  vel_scale: 10.0
+
+# -----------------------------------------------------------------------------
+# Kinematic structure
+# -----------------------------------------------------------------------------
+# Components, in the same order as joint_names_list. Each gets its own set of ROS
+# command and state topics, e.g. /astribot_arm_left/joint_space_command.
+robot_list:
+  - astribot_chassis
+  - astribot_torso
+  - astribot_head
+  - astribot_arm_left
+  - astribot_gripper_left
+  - astribot_arm_right
+  - astribot_gripper_right
+
+# Joints per component. The chassis entries are virtual 3-DOF (x, y, yaw) joints
+# that the omni adapter expands into wheel speeds; every other entry is a real
+# MJCF joint. Grippers expose only their main joint (the rest follow via MJCF
+# coupling).
+joint_names_list:
+  - - astribot_chassis_x
+    - astribot_chassis_y
+    - astribot_chassis_zrot
+  - - astribot_torso_joint_1
+    - astribot_torso_joint_2
+    - astribot_torso_joint_3
+    - astribot_torso_joint_4
+  - - astribot_head_joint_1
+    - astribot_head_joint_2
+  - - astribot_arm_left_joint_1
+    - astribot_arm_left_joint_2
+    - astribot_arm_left_joint_3
+    - astribot_arm_left_joint_4
+    - astribot_arm_left_joint_5
+    - astribot_arm_left_joint_6
+    - astribot_arm_left_joint_7
+  - - astribot_gripper_left_joint_L1
+  - - astribot_arm_right_joint_1
+    - astribot_arm_right_joint_2
+    - astribot_arm_right_joint_3
+    - astribot_arm_right_joint_4
+    - astribot_arm_right_joint_5
+    - astribot_arm_right_joint_6
+    - astribot_arm_right_joint_7
+  - - astribot_gripper_right_joint_L1
+
+# Per-component velocity feedforward, one bool per robot_list entry.
+# true  - add velocity feedforward on top of the position command (smoother)
+# false - position command only
+vel_compensation_list: [True, True, True, True, True, True, True]
+
+# -----------------------------------------------------------------------------
+# Motor controller configuration (optional per-robot overrides)
+# -----------------------------------------------------------------------------
+# Inherits from config/simulation.yaml. Uncomment to override specific components.
+# Example per-component override:
+# controller_config:
+#   per_component:
+#     astribot_gripper_left:
+#       dynamics_compensation:
+#         enabled: false  # Disable compensation for left gripper
+
+# Full per-joint tuned gains for all 25 joints
+controller_config:
+  per_joint:
+    # Chassis (3 virtual joints for omni base - MJCF values)
+    astribot_chassis_x:
+      position: {kp: 20000.0, kd: 2000.0}
+    astribot_chassis_y:
+      position: {kp: 20000.0, kd: 2000.0}
+    astribot_chassis_zrot:
+      position: {kp: 5000.0, kd: 500.0}
+
+    # Torso (4 joints - MJCF: kp=10000, kd=10000)
+    astribot_torso_joint_1:
+      position: {kp: 10000.0, kd: 1000.0}
+      torque: {kp: 0.0, kd: 5.0}
+    astribot_torso_joint_2:
+      position: {kp: 10000.0, kd: 1000.0}
+      torque: {kp: 0.0, kd: 5.0}
+    astribot_torso_joint_3:
+      position: {kp: 10000.0, kd: 1000.0}
+      torque: {kp: 0.0, kd: 3.0}
+    astribot_torso_joint_4:
+      position: {kp: 10000.0, kd: 1000.0}
+      torque: {kp: 0.0, kd: 3.0}
+
+    # Head (2 joints - MJCF: kp=100, kd=100)
+    astribot_head_joint_1:
+      position: {kp: 100.0, kd: 10.0}
+      torque: {kp: 0.0, kd: 0.5}
+    astribot_head_joint_2:
+      position: {kp: 100.0, kd: 10.0}
+      torque: {kp: 0.0, kd: 0.5}
+
+    # Left Arm (7 joints - MJCF values)
+    astribot_arm_left_joint_1:
+      position: {kp: 100.0, kd: 10.0}
+      torque: {kp: 0.0, kd: 2.0}
+    astribot_arm_left_joint_2:
+      position: {kp: 100.0, kd: 10.0}
+      torque: {kp: 0.0, kd: 2.0}
+    astribot_arm_left_joint_3:
+      position: {kp: 100.0, kd: 10.0}
+      torque: {kp: 0.0, kd: 1.5}
+    astribot_arm_left_joint_4:
+      position: {kp: 500.0, kd: 50.0}
+      torque: {kp: 0.0, kd: 1.0}
+    astribot_arm_left_joint_5:
+      position: {kp: 500.0, kd: 50.0}
+      torque: {kp: 0.0, kd: 0.5}
+    astribot_arm_left_joint_6:
+      position: {kp: 200.0, kd: 20.0}
+      torque: {kp: 0.0, kd: 0.3}
+    astribot_arm_left_joint_7:
+      position: {kp: 200.0, kd: 20.0}
+      torque: {kp: 0.0, kd: 0.3}
+
+    # Left Gripper (MJCF: kp=4.65, kd=500)
+    astribot_gripper_left_joint_L1:
+      position: {kp: 4.65, kd: 10.0}
+      torque: {kp: 0.0, kd: 0.2}
+
+    # Right Arm (7 joints - mirror left)
+    astribot_arm_right_joint_1:
+      position: {kp: 100.0, kd: 10.0}
+      torque: {kp: 0.0, kd: 2.0}
+    astribot_arm_right_joint_2:
+      position: {kp: 100.0, kd: 10.0}
+      torque: {kp: 0.0, kd: 2.0}
+    astribot_arm_right_joint_3:
+      position: {kp: 100.0, kd: 10.0}
+      torque: {kp: 0.0, kd: 1.5}
+    astribot_arm_right_joint_4:
+      position: {kp: 500.0, kd: 50.0}
+      torque: {kp: 0.0, kd: 1.0}
+    astribot_arm_right_joint_5:
+      position: {kp: 500.0, kd: 50.0}
+      torque: {kp: 0.0, kd: 0.5}
+    astribot_arm_right_joint_6:
+      position: {kp: 200.0, kd: 20.0}
+      torque: {kp: 0.0, kd: 0.3}
+    astribot_arm_right_joint_7:
+      position: {kp: 200.0, kd: 20.0}
+      torque: {kp: 0.0, kd: 0.3}
+
+    # Right Gripper
+    astribot_gripper_right_joint_L1:
+      position: {kp: 4.65, kd: 10.0}
+      torque: {kp: 0.0, kd: 0.2}
+
+  per_component:
+    astribot_gripper_left:
+      dynamics_compensation:
+        enabled: false
+    astribot_gripper_right:
+      dynamics_compensation:
+        enabled: false
+
+  dynamics_compensation:
+    enabled: true
+    modes: [1, 2, 3]
+    components:
+      gravity: true
+      coriolis: true
+      inertia: false
+      friction: false
+
+# -----------------------------------------------------------------------------
+# Display
+# -----------------------------------------------------------------------------
+# Render mode: human (GUI window) | rgb_array (off-screen) | '' (no rendering).
+mode: human
+display:
+  mode: human
+  width: 1920
+  height: 1080
+
+# Scene object names whose poses are published and can be reset.
+object_names: []
+
+# -----------------------------------------------------------------------------
+# Sensors -- NOT SUPPORTED IN THIS RELEASE
+# -----------------------------------------------------------------------------
+# Cameras, LiDAR, the LiDAR-integrated IMU and force/torque sensors are not
+# supported. The simulation always publishes control-related topics only: joint
+# states plus the chassis IMU. There is no CLI switch to change this.
+#
+# The two fields below are placeholders that keep the schema stable. Leave them
+# as they are.
+camera_names: []
+sensor_names: ["astribot_chassis_base_imu_gyro"]
+
+# =============================================================================
+# Backend overrides
+# =============================================================================
+# Only fields that differ from the values above. Applied after this file, so
+# these win. simulator_type is derived from --backend and is not set here;
+# shared rates live in config/simulation.yaml.
+# =============================================================================
+backend_overrides:
+  mujoco:
+    # Real wheels and rollers: highest fidelity on MuJoCo's contact solver.
+    chassis_model: dynamic
+  genesis:
+    # Genesis is unstable with fast roller contacts, so it uses virtual joints.
+    chassis_model: kinematic
+    omni:
+      # Genesis reads the chassis pose from this body. robot.base_link is the
+      # world anchor and must not be used.
+      base_link_name: chassis_base
